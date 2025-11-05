@@ -28,15 +28,14 @@ async fn setup() -> (AsyncDevice, AsyncQueue) {
         .await
         .expect("missing adapter");
     let (device, queue) = adapter
-        .request_device(
-            &wgpu::DeviceDescriptor {
-                required_features: wgpu::Features::empty(),
-                required_limits: adapter.limits(),
-                label: None,
-                memory_hints: wgpu::MemoryHints::default(),
-            },
-            None,
-        )
+        .request_device(&wgpu::DeviceDescriptor {
+            required_features: wgpu::Features::empty(),
+            required_limits: adapter.limits(),
+            label: None,
+            experimental_features: wgpu::ExperimentalFeatures::default(),
+            memory_hints: wgpu::MemoryHints::default(),
+            trace: wgpu::Trace::default(),
+        })
         .await
         .expect("missing device");
     // TODO: Look at swapping to `Rc` on web

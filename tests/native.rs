@@ -20,15 +20,14 @@ fn setup() -> (AsyncDevice, AsyncQueue) {
             .await
             .expect("missing adapter");
         let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    required_features: wgpu::Features::empty(),
-                    required_limits: adapter.limits(),
-                    label: None,
-                    memory_hints: wgpu::MemoryHints::default(),
-                },
-                None,
-            )
+            .request_device(&wgpu::DeviceDescriptor {
+                required_features: wgpu::Features::empty(),
+                required_limits: adapter.limits(),
+                label: None,
+                experimental_features: wgpu::ExperimentalFeatures::default(),
+                memory_hints: wgpu::MemoryHints::default(),
+                trace: wgpu::Trace::default(),
+            })
             .await
             .expect("missing device");
 
@@ -72,7 +71,9 @@ fn after_map_buffer_loop_stops() {
     //assert!(!is_mapped.load(std::sync::atomic::Ordering::Acquire));
 
     // Poll - buffer should map
-    device.poll(wgpu::Maintain::Wait);
+    device
+        .poll(wgpu::PollType::wait_indefinitely())
+        .expect("no timeout or submission index");
     assert!(is_mapped.load(std::sync::atomic::Ordering::Acquire));
 }
 
@@ -133,6 +134,8 @@ fn after_submit_empty_commands_and_map_buffer_twice_loop_stops() {
     assert!(!is_mapped.load(std::sync::atomic::Ordering::Acquire));
 
     // Poll - buffer should map
-    device.poll(wgpu::Maintain::Wait);
+    device
+        .poll(wgpu::PollType::wait_indefinitely())
+        .expect("no timeout or submission index");
     assert!(is_mapped.load(std::sync::atomic::Ordering::Acquire));
 }

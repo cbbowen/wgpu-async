@@ -3,7 +3,7 @@ use std::ops::DerefMut;
 use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
-use wgpu::Maintain;
+use wgpu::PollType;
 
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::{
@@ -16,8 +16,8 @@ use crate::AsyncDevice;
 /// Polls the device while-ever a future says there is something to poll.
 ///
 /// This objects corresponds to a thread that parks itself when no futures are
-/// waiting on it, and then calls `device.poll(Maintain::Wait)` repeatedly to block
-/// while-ever it has work that a future is waiting on.
+/// waiting on it, and then calls `device.poll(PollType::wait_indefinitely())`
+/// repeatedly to block while-ever it has work that a future is waiting on.
 ///
 /// The thread dies when this object is dropped, and when the GPU has finished processing
 /// all active futures.
@@ -50,7 +50,9 @@ impl PollLoop {
                                 locally_is_done.store(true, Ordering::Release);
                                 return;
                             }
-                            Some(device) => device.poll(Maintain::Wait),
+                            Some(device) => device
+                                .poll(PollType::wait_indefinitely())
+                                .expect("no timeout or submission index"),
                         };
                     }
 
@@ -162,7 +164,9 @@ impl<T> Future for WgpuFuture<T> {
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         // Poll whenever we enter to see if we can avoid waiting altogether
-        self.device.poll(Maintain::Poll);
+        self.device
+            .poll(PollType::Poll)
+            .expect("no timeout or submission index");
 
         // Check with scoped lock
         {
