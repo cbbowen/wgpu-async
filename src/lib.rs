@@ -22,7 +22,6 @@ mod async_device;
 mod async_queue;
 mod wgpu_future;
 
-use std::sync::Arc;
 
 pub use async_buffer::AsyncBuffer;
 pub use async_buffer::AsyncBufferSlice;
@@ -59,12 +58,7 @@ pub use wgpu_future::WgpuFuture;
 ///     .await
 ///     .expect("missing device");
 ///
-/// let (device, queue) = (Arc::new(device), Arc::new(queue));
-///
-/// let (async_device, async_queue) = wgpu_async::wrap(
-///     Arc::clone(&device),
-///     Arc::clone(&queue)
-/// );
+/// let (async_device, async_queue) = wgpu_async::wrap(device, queue);
 ///
 /// // Then we can do some async-enabled things:
 /// let async_buffer = async_device.create_buffer(&wgpu::BufferDescriptor {
@@ -76,7 +70,7 @@ pub use wgpu_future::WgpuFuture;
 /// async_buffer.slice(..).map_async(wgpu::MapMode::Read).await; // New await functionality!
 /// # })
 /// ```
-pub fn wrap(device: Arc<wgpu::Device>, queue: Arc<wgpu::Queue>) -> (AsyncDevice, AsyncQueue) {
+pub fn wrap(device: wgpu::Device, queue: wgpu::Queue) -> (AsyncDevice, AsyncQueue) {
     let device = AsyncDevice::new(device);
     let queue = AsyncQueue::new(device.clone(), queue);
 

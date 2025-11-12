@@ -6,10 +6,7 @@ use std::task::{Context, Poll, Waker};
 use wgpu::PollType;
 
 #[cfg(not(target_arch = "wasm32"))]
-use std::sync::{
-    atomic::{AtomicBool, AtomicUsize, Ordering},
-    Weak,
-};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use crate::AsyncDevice;
 
@@ -33,7 +30,7 @@ pub(crate) struct PollLoop {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl PollLoop {
-    pub(crate) fn new(device: Weak<wgpu::Device>) -> Self {
+    pub(crate) fn new(device: wgpu::Device) -> Self {
         let has_work = Arc::new(AtomicUsize::new(0));
         let is_done = Arc::new(AtomicBool::new(false));
         let locally_has_work = Arc::clone(&has_work);
@@ -44,21 +41,12 @@ impl PollLoop {
             handle: Some(std::thread::spawn(move || {
                 while !locally_is_done.load(Ordering::Acquire) {
                     while locally_has_work.load(Ordering::Acquire) != 0 {
-                        match device.upgrade() {
-                            None => {
-                                // If all other references to the device are dropped, don't keep hold of the device here
-                                locally_is_done.store(true, Ordering::Release);
-                                return;
-                            }
-                            Some(device) => device
-                                .poll(PollType::wait_indefinitely())
-                                .expect("no timeout or submission index"),
-                        };
+                        device
+                            .poll(PollType::wait_indefinitely())
+                            .expect("no timeout or submission index");
                     }
-
                     std::thread::park();
                 }
-                drop(device);
             })),
         }
     }

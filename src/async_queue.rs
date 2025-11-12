@@ -1,5 +1,5 @@
 use crate::{async_device::AsyncDevice, WgpuFuture};
-use std::{ops::Deref, sync::Arc};
+use std::ops::Deref;
 use wgpu::{CommandBuffer, Queue};
 
 /// A wrapper around a [`wgpu::Queue`] which shadows some methods to allow for callback-and-poll
@@ -7,11 +7,11 @@ use wgpu::{CommandBuffer, Queue};
 #[derive(Clone, Debug)]
 pub struct AsyncQueue {
     device: AsyncDevice,
-    queue: Arc<Queue>,
+    queue: Queue,
 }
 
 impl AsyncQueue {
-    pub(crate) fn new(device: AsyncDevice, queue: Arc<Queue>) -> Self {
+    pub(crate) fn new(device: AsyncDevice, queue: Queue) -> Self {
         Self { device, queue }
     }
 
@@ -23,12 +23,12 @@ impl AsyncQueue {
         &self,
         command_buffers: I,
     ) -> WgpuFuture<()> {
-        let queue_ref = Arc::clone(&self.queue);
+        let queue = self.queue.clone();
 
-        queue_ref.submit(command_buffers);
+        queue.submit(command_buffers);
 
         self.device.do_async(move |callback| {
-            queue_ref.on_submitted_work_done(|| callback(()));
+            queue.on_submitted_work_done(|| callback(()));
         })
     }
 

@@ -38,10 +38,7 @@ async fn setup() -> (AsyncDevice, AsyncQueue) {
         })
         .await
         .expect("missing device");
-    // TODO: Look at swapping to `Rc` on web
-    #[allow(clippy::arc_with_non_send_sync)]
-    let (device, queue) = (Arc::new(device), Arc::new(queue));
-    wgpu_async::wrap(Arc::clone(&device), Arc::clone(&queue))
+    wgpu_async::wrap(device, queue)
 }
 
 #[self::test]

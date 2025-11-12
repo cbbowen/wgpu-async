@@ -13,14 +13,14 @@ pub struct AsyncDevice {
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) poll_loop: Arc<crate::wgpu_future::PollLoop>,
 
-    device: Arc<Device>,
+    device: Device,
 }
 
 impl AsyncDevice {
-    pub(crate) fn new(device: Arc<Device>) -> Self {
+    pub(crate) fn new(device: Device) -> Self {
         Self {
             #[cfg(not(target_arch = "wasm32"))]
-            poll_loop: Arc::new(crate::wgpu_future::PollLoop::new(Arc::downgrade(&device))),
+            poll_loop: Arc::new(crate::wgpu_future::PollLoop::new(device.clone())),
             device,
         }
     }

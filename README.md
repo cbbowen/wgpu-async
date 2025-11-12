@@ -76,7 +76,7 @@ let (device, queue) = adapter
     .expect("missing device");
 
 // Make them async
-let (device, queue) = wgpu_async::wrap(Arc::new(device), Arc::new(queue));
+let (device, queue) = wgpu_async::wrap(device, queue);
 ```
 
 Then you can use shadowed `wgpu` methods with the exact same signatures, but with extra `async`-ness:
