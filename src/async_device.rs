@@ -54,18 +54,12 @@ impl AsyncDevice {
 
     /// Creates an [`AsyncBuffer`].
     pub fn create_buffer(&self, desc: &wgpu::BufferDescriptor) -> AsyncBuffer {
-        AsyncBuffer {
-            device: self.clone(),
-            buffer: self.device.create_buffer(desc),
-        }
+        AsyncBuffer::wrap(self.clone(), self.device.create_buffer(desc))
     }
 
     /// Creates an [`AsyncBuffer`] with data to initialize it.
     pub fn create_buffer_init(&self, desc: &BufferInitDescriptor) -> AsyncBuffer {
-        AsyncBuffer {
-            device: self.clone(),
-            buffer: self.device.create_buffer_init(desc),
-        }
+        AsyncBuffer::wrap(self.clone(), self.device.create_buffer_init(desc))
     }
 }
 impl Deref for AsyncDevice {

@@ -9,11 +9,19 @@ pub struct AsyncBuffer
 where
     Self: wgpu::WasmNotSend,
 {
-    pub(crate) device: AsyncDevice,
-    pub(crate) buffer: wgpu::Buffer,
+    device: AsyncDevice,
+    buffer: wgpu::Buffer,
 }
 
 impl AsyncBuffer {
+    /// Wraps a buffer to allow for mapping using `async`.
+    pub fn wrap(device: AsyncDevice, buffer: wgpu::Buffer) -> Self {
+        Self {
+            device,
+            buffer,
+        }
+    }
+
     /// Takes a slice of this buffer, in the same way a call to [`wgpu::Buffer::slice`] would,
     /// except wraps the result in an [`AsyncBufferSlice`] so that the `map_async` method can be
     /// awaited.
@@ -64,7 +72,15 @@ where
     device: AsyncDevice,
     buffer_slice: wgpu::BufferSlice<'a>,
 }
-impl AsyncBufferSlice<'_> {
+impl<'a> AsyncBufferSlice<'a> {
+    /// Wraps a buffer slice to allow for mapping using `async`.
+    pub fn wrap(device: AsyncDevice, buffer_slice: wgpu::BufferSlice<'a>) -> Self {
+        Self {
+            device,
+            buffer_slice,
+        }
+    }
+
     /// An awaitable version of [`wgpu::Buffer::map_async`].
     pub fn map_async(&self, mode: wgpu::MapMode) -> WgpuFuture<Result<(), BufferAsyncError>> {
         self.device
