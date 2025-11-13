@@ -48,13 +48,8 @@ fn after_map_buffer_loop_stops() {
 
     // Map and unmap with async api, which polls on extra thread
     pollster::block_on(async {
-        async_buffer
-            .slice(..)
-            .map_async(wgpu::MapMode::Read)
-            .await
-            .unwrap();
+        async_buffer.slice(..).map_async().await.unwrap();
     });
-    async_buffer.unmap();
 
     // Stop using the async api
     let buffer: &wgpu::Buffer = async_buffer.deref();
@@ -106,8 +101,8 @@ fn after_submit_empty_commands_and_map_buffer_twice_loop_stops() {
     let q2 = queue.submit(vec![commands2]);
 
     // Map
-    let f1 = async_buffer1.slice(..).map_async(wgpu::MapMode::Read);
-    let f2 = async_buffer2.slice(..).map_async(wgpu::MapMode::Write);
+    let f1 = async_buffer1.slice(..).map_async();
+    let f2 = async_buffer2.slice(..).map_async_mut();
 
     pollster::block_on(async {
         q1.await;
@@ -115,9 +110,6 @@ fn after_submit_empty_commands_and_map_buffer_twice_loop_stops() {
         f1.await.unwrap();
         f2.await.unwrap();
     });
-
-    async_buffer1.unmap();
-    async_buffer2.unmap();
 
     // Stop using the async api
     let buffer: &wgpu::Buffer = async_buffer1.deref();

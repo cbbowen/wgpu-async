@@ -54,16 +54,7 @@ fn await_map_blocks_until_mapped() {
         });
 
         // Map and unmap with async api
-        async_buffer
-            .slice(..)
-            .map_async(wgpu::MapMode::Read)
-            .await
-            .unwrap();
-
-        // Due to await, buffer can be read here
-        let bytes = async_buffer.slice(..).get_mapped_range().to_vec();
-
-        async_buffer.unmap();
+        let bytes = async_buffer.slice(..).map_async().await.unwrap().to_vec();
 
         assert_eq!(bytes.len(), 8192);
     })
@@ -91,14 +82,10 @@ fn await_map_write_copy_await_map_read() {
         let data = (0..(128 * 1024)).map(|v| v as u8).collect::<Vec<_>>();
         async_buffer1
             .slice(..)
-            .map_async(wgpu::MapMode::Write)
+            .map_async_mut()
             .await
-            .unwrap();
-        async_buffer1
-            .slice(..)
-            .get_mapped_range_mut()
+            .unwrap()
             .copy_from_slice(&data);
-        async_buffer1.unmap();
 
         // Submit copy command
         let mut commands =
@@ -107,12 +94,7 @@ fn await_map_write_copy_await_map_read() {
         queue.submit(vec![commands.finish()]).await;
 
         // Read copied data
-        async_buffer2
-            .slice(..)
-            .map_async(wgpu::MapMode::Read)
-            .await
-            .unwrap();
-        let read_data = async_buffer2.slice(..).get_mapped_range().to_vec();
+        let read_data = async_buffer2.slice(..).map_async().await.unwrap().to_vec();
 
         assert_eq!(read_data, data);
     });

@@ -22,7 +22,6 @@ mod async_device;
 mod async_queue;
 mod wgpu_future;
 
-
 pub use async_buffer::AsyncBuffer;
 pub use async_buffer::AsyncBufferSlice;
 pub use async_device::AsyncDevice;
@@ -67,7 +66,7 @@ pub use wgpu_future::WgpuFuture;
 ///     usage: wgpu::BufferUsages::MAP_READ,
 ///     mapped_at_creation: false,
 /// });
-/// async_buffer.slice(..).map_async(wgpu::MapMode::Read).await; // New await functionality!
+/// async_buffer.slice(..).map_async().await; // New await functionality!
 /// # })
 /// ```
 pub fn wrap(device: wgpu::Device, queue: wgpu::Queue) -> (AsyncDevice, AsyncQueue) {
