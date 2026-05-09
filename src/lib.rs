@@ -24,6 +24,7 @@ mod wgpu_future;
 
 pub use async_buffer::AsyncBuffer;
 pub use async_buffer::AsyncBufferSlice;
+pub use async_buffer::AsyncMapError;
 pub use async_device::AsyncDevice;
 pub use async_queue::AsyncQueue;
 pub use wgpu_future::WgpuFuture;
@@ -42,6 +43,7 @@ pub use wgpu_future::WgpuFuture;
 ///         power_preference: wgpu::PowerPreference::HighPerformance,
 ///         compatible_surface: None,
 ///         force_fallback_adapter: true,
+///         apply_limit_buckets: false,
 ///     })
 ///     .await
 ///     .expect("missing adapter");

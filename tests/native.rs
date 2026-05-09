@@ -16,6 +16,7 @@ fn setup() -> (AsyncDevice, AsyncQueue) {
                 power_preference: wgpu::PowerPreference::HighPerformance,
                 compatible_surface: None,
                 force_fallback_adapter: true,
+                apply_limit_buckets: false,
             })
             .await
             .expect("missing adapter");

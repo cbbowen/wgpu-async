@@ -5,6 +5,14 @@ use std::{
 };
 use wgpu::BufferAddress;
 
+#[derive(thiserror::Error, Debug)]
+pub enum AsyncMapError {
+    #[error("error mapping range")]
+    MapRange(#[from] wgpu::MapRangeError),
+    #[error("error asynchronously mapping buffer")]
+    BufferAsync(#[from] wgpu::BufferAsyncError),
+}
+
 /// A wrapper around a [`wgpu::Buffer`] which shadows some methods to allow for async
 /// mapping using Rust's `async` API.
 #[derive(Debug)]
@@ -37,7 +45,7 @@ impl AsyncBuffer {
     pub async fn map_async<S: RangeBounds<wgpu::BufferAddress>>(
         &self,
         bounds: S,
-    ) -> Result<AsyncBufferView<'_>, wgpu::BufferAsyncError> {
+    ) -> Result<AsyncBufferView<'_>, AsyncMapError> {
         let slice = self.slice(bounds);
         slice.map_async().await
     }
@@ -46,7 +54,7 @@ impl AsyncBuffer {
     pub async fn map_async_mut<S: RangeBounds<wgpu::BufferAddress>>(
         &self,
         bounds: S,
-    ) -> Result<AsyncBufferViewMut<'_>, wgpu::BufferAsyncError> {
+    ) -> Result<AsyncBufferViewMut<'_>, AsyncMapError> {
         let slice = self.slice(bounds);
         slice.map_async_mut().await
     }
@@ -94,12 +102,12 @@ impl<'a> Deref for AsyncBufferView<'a> {
 }
 
 impl<'a> AsyncBufferView<'a> {
-    fn new(buffer_slice: &wgpu::BufferSlice<'a>) -> Self {
-        let buffer_view = buffer_slice.get_mapped_range();
-        Self {
+    fn new(buffer_slice: &wgpu::BufferSlice<'a>) -> Result<Self, wgpu::MapRangeError> {
+        let buffer_view = buffer_slice.get_mapped_range()?;
+        Ok(Self {
             buffer: buffer_slice.buffer(),
             buffer_view: ManuallyDrop::new(buffer_view),
-        }
+        })
     }
 }
 
@@ -133,12 +141,12 @@ impl<'a> DerefMut for AsyncBufferViewMut<'a> {
 }
 
 impl<'a> AsyncBufferViewMut<'a> {
-    fn new(buffer_slice: &wgpu::BufferSlice<'a>) -> Self {
-        let buffer_view = buffer_slice.get_mapped_range_mut();
-        Self {
+    fn new(buffer_slice: &wgpu::BufferSlice<'a>) -> Result<Self, wgpu::MapRangeError> {
+        let buffer_view = buffer_slice.get_mapped_range_mut()?;
+        Ok(Self {
             buffer: buffer_slice.buffer(),
             buffer_view: ManuallyDrop::new(buffer_view),
-        }
+        })
     }
 }
 
@@ -172,19 +180,19 @@ impl<'a> AsyncBufferSlice<'a> {
     }
 
     /// An awaitable version of [`wgpu::BufferSlice::map_async`] with [`wgpu::MapMode::Read`].
-    pub async fn map_async(self) -> Result<AsyncBufferView<'a>, wgpu::BufferAsyncError> {
+    pub async fn map_async(self) -> Result<AsyncBufferView<'a>, AsyncMapError> {
         self.device
             .do_async(|callback| self.buffer_slice.map_async(wgpu::MapMode::Read, callback))
             .await?;
-        Ok(AsyncBufferView::new(&self.buffer_slice))
+        Ok(AsyncBufferView::new(&self.buffer_slice)?)
     }
 
     /// An awaitable version of [`wgpu::BufferSlice::map_async`] with [`wgpu::MapMode::Write`].
-    pub async fn map_async_mut(self) -> Result<AsyncBufferViewMut<'a>, wgpu::BufferAsyncError> {
+    pub async fn map_async_mut(self) -> Result<AsyncBufferViewMut<'a>, AsyncMapError> {
         self.device
             .do_async(|callback| self.buffer_slice.map_async(wgpu::MapMode::Write, callback))
             .await?;
-        Ok(AsyncBufferViewMut::new(&self.buffer_slice))
+        Ok(AsyncBufferViewMut::new(&self.buffer_slice)?)
     }
 }
 impl<'a> Deref for AsyncBufferSlice<'a> {
