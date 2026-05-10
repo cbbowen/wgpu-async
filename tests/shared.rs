@@ -6,8 +6,6 @@ use test;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen_test::wasm_bindgen_test as test;
 
-use std::sync::Arc;
-
 use wgpu_async::{AsyncDevice, AsyncQueue};
 
 fn block_on<F: std::future::Future<Output = ()> + 'static>(f: F) {
@@ -18,13 +16,16 @@ fn block_on<F: std::future::Future<Output = ()> + 'static>(f: F) {
 }
 
 async fn setup() -> (AsyncDevice, AsyncQueue) {
-    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
+    // wgpu 29.0
+    // let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
+    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
     let adapter = instance
         .request_adapter(&wgpu::RequestAdapterOptions {
             power_preference: wgpu::PowerPreference::HighPerformance,
             compatible_surface: None,
             force_fallback_adapter: true,
-            apply_limit_buckets: false,
+            // wgpu 29.0
+            // apply_limit_buckets: false,
         })
         .await
         .expect("missing adapter");

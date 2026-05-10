@@ -37,14 +37,9 @@ pub use wgpu_future::WgpuFuture;
 /// ```
 /// # use std::sync::Arc;
 /// # pollster::block_on(async {
-/// let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
+/// let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
 /// let adapter = instance
-///     .request_adapter(&wgpu::RequestAdapterOptions {
-///         power_preference: wgpu::PowerPreference::HighPerformance,
-///         compatible_surface: None,
-///         force_fallback_adapter: true,
-///         apply_limit_buckets: false,
-///     })
+///     .request_adapter(&wgpu::RequestAdapterOptions::default())
 ///     .await
 ///     .expect("missing adapter");
 /// let (device, queue) = adapter
